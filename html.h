@@ -1,12 +1,18 @@
 #ifndef __HTML_H_
 #define __HTML_H_
 
+#include <ctype.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
 #include "stack.h"
 #include "attrib.h"
 #include "tag.h"
+#include "util.h"
 
 #ifndef HTML_PARSE_STATE_TYPE
-#define HTML_PARSE_STATE_TYPE void
+#define HTML_PARSE_STATE_TYPE struct HtmlParseState
 #endif
 
 typedef struct HtmlElement HtmlElement;
@@ -25,7 +31,49 @@ struct HtmlDocument {
 	HtmlElement *root_element;
 };
 
-typedef HTML_PARSE_STATE_TYPE HtmlParseState;
+enum State {
+	STATE_CHILD,
+	STATE_OPEN,
+	STATE_DECLARATION,
+	STATE_BEGIN,
+	STATE_END,
+	STATE_ATTRIB,
+	STATE_ATTRIB_KEY,
+	STATE_ATTRIB_VALUE,
+	STATE_ATTRIB_QUOTEVALUE,
+	STATE_CLOSE,
+	STATE_SELFCLOSE,
+	STATE_END_CLOSE,
+	STATE_ENTITY,
+	
+	/*This is silly*/
+	STATE_COMMENT_BEGIN,
+	STATE_COMMENT,
+	STATE_COMMENT_END1,
+	STATE_COMMENT_END2,
+	
+	STATES,
+};
+
+struct HtmlParseState {
+	HtmlDocument *document;
+	Stack *stack;
+	HtmlElement *elem;
+	HtmlTag tag;
+	char *tag_name;
+	
+	HtmlAttrib *attrib;
+	HtmlAttribKey attrib_key;
+	char *attrib_key_name;
+	
+	enum State state;
+	
+	/*used for stripping out spaces*/
+	size_t stringlen;
+	char space;
+};
+
+typedef struct HtmlParseState HtmlParseState;
 
 extern const char const *html_tag[HTML_TAGS];
 

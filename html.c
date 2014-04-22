@@ -1,58 +1,6 @@
-#include <ctype.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-
-#define HTML_PARSE_STATE_TYPE struct HtmlParseState
-
-#include "stack.h"
-#include "attrib.h"
 #include "html.h"
-#include "util.h"
 
 #define CASE_SPACE case ' ': case '\r': case '\n': case '\t'
-
-enum State {
-	STATE_CHILD,
-	STATE_OPEN,
-	STATE_DECLARATION,
-	STATE_BEGIN,
-	STATE_END,
-	STATE_ATTRIB,
-	STATE_ATTRIB_KEY,
-	STATE_ATTRIB_VALUE,
-	STATE_ATTRIB_QUOTEVALUE,
-	STATE_CLOSE,
-	STATE_SELFCLOSE,
-	STATE_END_CLOSE,
-	STATE_ENTITY,
-	
-	/*This is silly*/
-	STATE_COMMENT_BEGIN,
-	STATE_COMMENT,
-	STATE_COMMENT_END1,
-	STATE_COMMENT_END2,
-	
-	STATES,
-};
-
-struct HtmlParseState {
-	HtmlDocument *document;
-	Stack *stack;
-	HtmlElement *elem;
-	HtmlTag tag;
-	char *tag_name;
-	
-	HtmlAttrib *attrib;
-	HtmlAttribKey attrib_key;
-	char *attrib_key_name;
-	
-	enum State state;
-	
-	/*used for stripping out spaces*/
-	size_t stringlen;
-	char space;
-};
 
 static int findtag(void *elem, void *tag) {
 	if(((HtmlElement *) elem)->tag == *((int *) tag))
@@ -60,7 +8,7 @@ static int findtag(void *elem, void *tag) {
 	return 0;
 }
 
-int html_tag_is_script(HtmlTag tag) {
+static int html_tag_is_script(HtmlTag tag) {
 	switch(tag) {
 		case HTML_TAG_SCRIPT:
 		case HTML_TAG_STYLE:
@@ -70,7 +18,7 @@ int html_tag_is_script(HtmlTag tag) {
 	}
 }
 
-int html_tag_is_selfclose(HtmlTag tag) {
+static int html_tag_is_selfclose(HtmlTag tag) {
 	switch(tag) {
 		case HTML_TAG_BASE:
 		case HTML_TAG_BASEFONT:
@@ -90,7 +38,7 @@ int html_tag_is_selfclose(HtmlTag tag) {
 	}
 }
 
-HtmlAttribKey html_lookup_length_attrib_key(const char *string, size_t length) {
+static HtmlAttribKey html_lookup_length_attrib_key(const char *string, size_t length) {
 	int i, imin = 0, imax = HTML_ATTRIB_KEYS, res;
 	
 	while(imax >= imin) {
@@ -108,7 +56,7 @@ HtmlAttribKey html_lookup_length_attrib_key(const char *string, size_t length) {
 	return HTML_ATTRIB_UNKNOWN;
 }
 
-HtmlTag html_lookup_length_tag(const char *string, size_t length) {
+static HtmlTag html_lookup_length_tag(const char *string, size_t length) {
 	//TODO: optimize string compare for binary tree search (no "restarts")
 	int i, imin = 0, imax = HTML_TAGS, res;
 
@@ -146,7 +94,7 @@ HtmlTag html_lookup_tag(const char *string) {
 	return HTML_TAG_UNKNOWN;
 }
 
-HtmlAttrib *html_new_element_attrib(enum HtmlAttribKey key, char *key_name, const char* value, size_t length) {
+static HtmlAttrib *html_new_element_attrib(enum HtmlAttribKey key, char *key_name, const char* value, size_t length) {
 	HtmlAttrib *attrib;
 	if(!(attrib = malloc(sizeof(HtmlAttrib))))
 		return NULL;
@@ -159,7 +107,7 @@ HtmlAttrib *html_new_element_attrib(enum HtmlAttribKey key, char *key_name, cons
 	return attrib;
 }
 
-HtmlElement *html_new_element(HtmlTag tag, char *tag_name, HtmlAttrib *attrib, HtmlElement *child, HtmlElement *sibling, char *text) {
+static HtmlElement *html_new_element(HtmlTag tag, char *tag_name, HtmlAttrib *attrib, HtmlElement *child, HtmlElement *sibling, char *text) {
 	HtmlElement *elem;
 	if(!(elem = malloc(sizeof(HtmlElement))))
 		return NULL;
@@ -369,11 +317,10 @@ const char *html_parse_stream(HtmlParseState *state, const char *stream, const c
 						ADVANCE_TOKEN;
 						continue;
 					case '/':
+					case '?':
 						state->state = STATE_SELFCLOSE;
 						ADVANCE_TOKEN;
 						continue;
-					case '?':
-						ADVANCE_TOKEN;
 					case '>':
 						state->state = STATE_CLOSE;
 						ADVANCE_TOKEN;
@@ -685,7 +632,7 @@ void *html_print_dom(HtmlDocument *document) {
 	return NULL;
 }
 
-void *html_free_attrib(HtmlAttrib *attrib) {
+static void *html_free_attrib(HtmlAttrib *attrib) {
 	if(!attrib)
 		return NULL;
 	html_free_attrib(attrib->next);

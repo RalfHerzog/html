@@ -1,4 +1,3 @@
-#include <stdlib.h>
 #include "stack.h"
 
 void *stack_push(Stack **stack, void *item) {

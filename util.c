@@ -1,7 +1,3 @@
-#include <stdlib.h>
-#include <string.h>
-#include <ctype.h>
-
 #include "util.h"
 
 int stringcompare(const char *s1, const char *s2, size_t length) {

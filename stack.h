@@ -1,6 +1,8 @@
 #ifndef __STACK_H_
 #define __STACK_H_
 
+#include <stdlib.h>
+
 typedef struct Stack Stack;
 struct Stack {
 	void *item;

@@ -1,6 +1,9 @@
 #ifndef __TAG_H_
 #define __TAG_H_
 
+#include <stdlib.h>
+#include <string.h>
+
 /*keep sorted, binary search*/
 typedef enum HtmlTag HtmlTag;
 enum HtmlTag {
