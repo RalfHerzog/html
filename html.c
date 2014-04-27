@@ -575,19 +575,6 @@ const char *html_parse_stream(HtmlParseState *state, const char *stream, const c
 	#undef ADVANCE_TOKEN
 }
 
-HtmlDocument *html_parse_end(HtmlParseState *state) {
-	HtmlDocument *document;
-	
-	if(!state)
-		return NULL;
-	
-	document = state->document;
-	while(stack_pop(&state->stack));
-	free(state);
-	
-	return document;
-}
-
 void *html_print_dom_element(HtmlElement *element, int level) {
 	int i;
 	HtmlElement *sibling;
@@ -643,11 +630,35 @@ static void *html_free_attrib(HtmlAttrib *attrib) {
 	return NULL;
 }
 
+HtmlDocument *html_parse_end(HtmlParseState *state) {
+	HtmlDocument *document;
+	
+	if(!state)
+		return NULL;
+	
+	document = state->document;
+	while(stack_pop(&state->stack));
+	
+	free(state->tag_name);
+	state->tag_name = 0;
+	
+	free(state->attrib_key_name);
+	state->attrib_key_name = 0;
+	
+	memset(state, 0, sizeof(HtmlParseState));
+	free(state);
+	
+	return document;
+}
+
 void *html_free_element(HtmlElement *element) {
 	if(!element)
 		return NULL;
 	while(element) {
-		html_free_attrib(element->attrib);
+		if (element->attrib) {
+			html_free_attrib(element->attrib);
+			free(element->attrib);
+		}
 		if(element->tag_name) {
 			free(element->tag_name);
 		}
