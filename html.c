@@ -153,14 +153,8 @@ HtmlParseState *html_parse_begin() {
 	if(!(state = malloc(sizeof(HtmlParseState))))
 		return NULL;
 	
-	state->document = NULL;
-	state->stack = NULL;
-	state->elem = NULL;
-	state->tag = 0;
-	state->attrib_key = 0;
+	memset(state, 0, sizeof(HtmlParseState));
 	state->state = STATE_CHILD;
-	state->stringlen = 0;
-	state->space = 0;
 	
 	if(!(state->document = malloc(sizeof(HtmlDocument))))
 		goto error;
