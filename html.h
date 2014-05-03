@@ -15,6 +15,8 @@
 #define HTML_PARSE_STATE_TYPE struct HtmlParseState
 #endif
 
+#define HTML_BUFFSIZE 1024
+
 typedef struct HtmlElement HtmlElement;
 struct HtmlElement {
 	HtmlTag tag;
@@ -55,6 +57,7 @@ enum State {
 	STATES,
 };
 
+typedef struct HtmlParseState HtmlParseState;
 struct HtmlParseState {
 	HtmlDocument *document;
 	Stack *stack;
@@ -73,14 +76,16 @@ struct HtmlParseState {
 	char space;
 };
 
-typedef struct HtmlParseState HtmlParseState;
-
 extern const char const *html_tag[HTML_TAGS];
 
 HtmlTag html_lookup_tag(const char *string);
+
+HtmlDocument *html_parse_file(const char* filepath);
+
 HtmlParseState *html_parse_begin();
 const char *html_parse_stream(HtmlParseState *state, const char *stream, const char *token, size_t len);
 HtmlDocument *html_parse_end(HtmlParseState *state);
+
 void *html_free_element(HtmlElement *element);
 
 // printing

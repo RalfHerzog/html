@@ -2,6 +2,32 @@
 
 #define CASE_SPACE case ' ': case '\r': case '\n': case '\t'
 
+HtmlDocument *html_parse_file(const char* filepath) {
+	HtmlParseState *parse_state;
+	FILE *f;
+	int len, total_len, buffsize = HTML_BUFFSIZE;
+	char buffer[HTML_BUFFSIZE + 1];
+	const char *token = buffer;
+	
+	parse_state = html_parse_begin();
+	
+	f = fopen( filepath, "r" );
+	while(!feof(f)) {
+		len = fread(buffer + (HTML_BUFFSIZE - buffsize), 1, buffsize, f);
+		if (!len) {
+			buffsize = HTML_BUFFSIZE;
+			continue;
+		}
+		total_len += len;
+		token = html_parse_stream(parse_state, buffer + (HTML_BUFFSIZE - buffsize), buffer, len);
+		buffsize = (token - buffer);
+		memmove(buffer, token, HTML_BUFFSIZE - buffsize);
+	}
+	fclose(f);
+	
+	return html_parse_end(parse_state);
+}
+
 static int findtag(void *elem, void *tag) {
 	if(((HtmlElement *) elem)->tag == *((int *) tag))
 		return 1;
