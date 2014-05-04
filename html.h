@@ -24,6 +24,8 @@ struct HtmlElement {
 	
 	char *text;
 	HtmlAttrib *attrib;
+	
+	HtmlElement *parent;
 	HtmlElement *child;
 	HtmlElement *sibling;
 };

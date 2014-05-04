@@ -133,7 +133,7 @@ static HtmlAttrib *html_new_element_attrib(enum HtmlAttribKey key, char *key_nam
 	return attrib;
 }
 
-static HtmlElement *html_new_element(HtmlTag tag, char *tag_name, HtmlAttrib *attrib, HtmlElement *child, HtmlElement *sibling, char *text) {
+static HtmlElement *html_new_element(HtmlTag tag, char *tag_name, HtmlAttrib *attrib, HtmlElement *parent, HtmlElement *child, HtmlElement *sibling, char *text) {
 	HtmlElement *elem;
 	if(!(elem = malloc(sizeof(HtmlElement))))
 		return NULL;
@@ -142,6 +142,8 @@ static HtmlElement *html_new_element(HtmlTag tag, char *tag_name, HtmlAttrib *at
 	elem->tag = tag;
 	elem->tag_name = tag_name;
 	elem->attrib = attrib;
+	
+	elem->parent = parent;
 	elem->child = child;
 	elem->sibling = sibling;
 	
@@ -158,7 +160,7 @@ HtmlParseState *html_parse_begin() {
 	
 	if(!(state->document = malloc(sizeof(HtmlDocument))))
 		goto error;
-	if(!(state->elem = html_new_element(HTML_TAG_NONE, NULL, NULL, NULL, NULL, NULL)))
+	if(!(state->elem = html_new_element(HTML_TAG_NONE, NULL, NULL, NULL, NULL, NULL, NULL)))
 		goto error;
 	if(!stack_push(&state->stack, state->elem))
 		goto error;
@@ -207,14 +209,16 @@ const char *html_parse_stream(HtmlParseState *state, const char *stream, const c
 							if(state->stringlen > 1 || !isspace(*token)) {
 								text = stringduplicate_length(token, state->stringlen);
 								
-								if(!(elem_tmp = html_new_element(HTML_TAG_NONE, NULL, NULL, NULL, NULL, text)))
+								if(!(elem_tmp = html_new_element(HTML_TAG_NONE, NULL, NULL, NULL, NULL, NULL, text)))
 									goto error;
 								if(state->elem) {
 									state->elem->sibling = elem_tmp;
+									state->elem->sibling->parent = state->elem->parent;
 									state->elem = elem_tmp;
 								} else {
 									state->elem = stack_peek(&state->stack);
 									state->elem->child = elem_tmp;
+									state->elem->child->parent = state->elem;
 									state->elem = elem_tmp;
 								}
 							}
@@ -448,14 +452,16 @@ const char *html_parse_stream(HtmlParseState *state, const char *stream, const c
 							continue;
 						}
 						//add to stack
-						if(!(elem_tmp = html_new_element(state->tag, state->tag_name, state->attrib, NULL, NULL, NULL)))
+						if(!(elem_tmp = html_new_element(state->tag, state->tag_name, state->attrib, NULL, NULL, NULL, NULL)))
 							goto error;
 						if(state->elem) {
 							state->elem->sibling = elem_tmp;
+							state->elem->sibling->parent = state->elem->parent;
 							state->elem = elem_tmp;
 						} else {
 							state->elem = stack_peek(&state->stack);
 							state->elem->child = elem_tmp;
+							state->elem->child->parent = state->elem;
 							state->elem = elem_tmp;
 						}
 						
@@ -483,14 +489,16 @@ const char *html_parse_stream(HtmlParseState *state, const char *stream, const c
 							continue;
 						}
 						//add to stack
-						if(!(elem_tmp = html_new_element(state->tag, state->tag_name, state->attrib, NULL, NULL, NULL)))
+						if(!(elem_tmp = html_new_element(state->tag, state->tag_name, state->attrib, NULL, NULL, NULL, NULL)))
 							goto error;
 						if(state->elem) {
 							state->elem->sibling = elem_tmp;
+							state->elem->sibling->parent = state->elem->parent;
 							state->elem = elem_tmp;
 						} else {
 							state->elem = stack_peek(&state->stack);
 							state->elem->child = elem_tmp;
+							state->elem->child->parent = state->elem;
 							state->elem = elem_tmp;
 						}
 						state->tag = 0;
