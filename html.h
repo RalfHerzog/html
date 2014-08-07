@@ -28,6 +28,8 @@ struct HtmlElement {
 	HtmlElement *parent;
 	HtmlElement *child;
 	HtmlElement *sibling;
+	
+	int count;
 };
 
 typedef struct HtmlDocument HtmlDocument;
@@ -83,6 +85,7 @@ extern const char const *html_tag[HTML_TAGS];
 HtmlTag html_lookup_tag(const char *string);
 
 HtmlDocument *html_parse_file(const char* filepath);
+HtmlDocument *html_parse_memory(const char* content, const int length);
 
 HtmlParseState *html_parse_begin();
 const char *html_parse_stream(HtmlParseState *state, const char *stream, const char *token, size_t len);
