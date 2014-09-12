@@ -413,19 +413,6 @@ const char *html_parse_stream(HtmlParseState *state, const char *stream, const c
 					default:
 						continue;
 				}
-			case STATE_ATTRIB_QUOTEVALUE:
-				switch(c) {
-					case '"':
-						attrib_tmp = html_new_element_attrib(state->attrib_key, state->attrib_key_name, token, (stream - 1) - token);
-						attrib_append(&state->attrib, attrib_tmp);
-						attrib_tmp = NULL;
-
-						state->state = STATE_ATTRIB;
-						ADVANCE_TOKEN;
-						continue;
-					default:
-						continue;
-				}
 			case STATE_ATTRIB_VALUE:
 				switch(c) {
 					CASE_SPACE:
@@ -444,8 +431,12 @@ const char *html_parse_stream(HtmlParseState *state, const char *stream, const c
 						state->state = STATE_CLOSE;
 						ADVANCE_TOKEN;
 						goto reswitch;
+					case '\'':
+						state->state = STATE_ATTRIB_QUOTE_SINGLE;
+						ADVANCE_TOKEN;
+						continue;
 					case '"':
-						state->state = STATE_ATTRIB_QUOTEVALUE;
+						state->state = STATE_ATTRIB_QUOTE_DOUBLE;
 						ADVANCE_TOKEN;
 						continue;
 					case '/':
@@ -459,6 +450,35 @@ const char *html_parse_stream(HtmlParseState *state, const char *stream, const c
 					default:
 						continue;
 				}
+			case STATE_ATTRIB_QUOTE_SINGLE:
+				switch(c) {
+					case '\'':
+						attrib_tmp = html_new_element_attrib(state->attrib_key, state->attrib_key_name, token, (stream - 1) - token);
+						attrib_append(&state->attrib, attrib_tmp);
+						attrib_tmp = NULL;
+
+						state->state = STATE_ATTRIB;
+						ADVANCE_TOKEN;
+						continue;
+					default:
+						continue;
+				}
+				break;
+			// TODO: This is very redundant to the code above, try to optimize later
+			case STATE_ATTRIB_QUOTE_DOUBLE:
+				switch(c) {
+					case '"':
+						attrib_tmp = html_new_element_attrib(state->attrib_key, state->attrib_key_name, token, (stream - 1) - token);
+						attrib_append(&state->attrib, attrib_tmp);
+						attrib_tmp = NULL;
+
+						state->state = STATE_ATTRIB;
+						ADVANCE_TOKEN;
+						continue;
+					default:
+						continue;
+				}
+				break;
 			case STATE_CLOSE:
 				switch(c) {
 					case '>':
